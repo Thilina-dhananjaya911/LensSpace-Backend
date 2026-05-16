@@ -1,0 +1,78 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #3b82f6; /* Blue */
+  --color-primary-dark: #2563eb;
+  --color-secondary: #10b981; /* Emerald */
+  --color-accent: #f59e0b; /* Amber */
+  --color-background: #f8fafc; /* Slate 50 */
+  --color-surface: #ffffff;
+  --color-text: #0f172a; /* Slate 900 */
+  --color-text-muted: #64748b; /* Slate 500 */
+  
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+/* Base styles for dark mode if user prefers */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-background: #0f172a; /* Slate 900 */
+    --color-surface: #1e293b; /* Slate 800 */
+    --color-text: #f8fafc; /* Slate 50 */
+    --color-text-muted: #94a3b8; /* Slate 400 */
+  }
+}
+
+body {
+  background-color: var(--color-background);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Glassmorphism utility */
+.glass {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+@media (prefers-color-scheme: dark) {
+  .glass {
+    background: rgba(30, 41, 59, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+}
+
+/* Micro-animations */
+.hover-lift {
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hover-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+}
+
+/* Leaflet Map Overrides to fit theme */
+.leaflet-container {
+  font-family: var(--font-sans) !important;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background-color: #cbd5e1;
+  border-radius: 20px;
+}
+@media (prefers-color-scheme: dark) {
+  ::-webkit-scrollbar-thumb {
+    background-color: #475569;
+  }
+}
