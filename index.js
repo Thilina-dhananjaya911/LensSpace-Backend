@@ -3,9 +3,11 @@ import mongoose from "mongoose";
 import bodyParser from "body-parser";
 import dotenv from "dotenv";
 import route from "./routes/spotRoute.js";
+import authRoute from "./routes/authRoute.js";
 
 const app = express();
 app.use(bodyParser.json());
+app.use('/uploads', express.static('uploads'));
 dotenv.config();
 
 const PORT = process.env.PORT || 5000;
@@ -23,3 +25,4 @@ mongoose
   .catch((error) => console.log(error));
 
 app.use("/api/spot", route);
+app.use("/api/auth", authRoute);

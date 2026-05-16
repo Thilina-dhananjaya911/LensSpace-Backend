@@ -26,6 +26,8 @@ const spotSchema = new mongoose.Schema({
 
   latitude: { type: Number, required: true },
   longitude: { type: Number, required: true },
+  image: { type: String, required: true },
+  createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'users', required: true }
 });
 
 export default mongoose.model("spots", spotSchema);
