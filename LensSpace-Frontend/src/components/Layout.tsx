@@ -1,17 +1,31 @@
+import { useState, useRef, useEffect } from 'react';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { Camera, Map as MapIcon, PlusCircle, Search, LogOut, User } from 'lucide-react';
+import { Camera, Map as MapIcon, PlusCircle, Search, LogOut, User, Heart, ChevronDown } from 'lucide-react';
 
 export default function Layout() {
   const location = useLocation();
   const navigate = useNavigate();
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
   
   const token = localStorage.getItem('token');
   const userName = localStorage.getItem('userName');
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('userName');
     localStorage.removeItem('userId');
+    setDropdownOpen(false);
     navigate('/');
   };
 
@@ -57,14 +71,37 @@ export default function Layout() {
               
               <div className="flex items-center gap-4 border-l border-slate-200 dark:border-slate-700 pl-4 ml-2">
                 {token ? (
-                  <>
-                    <span className="text-sm font-medium text-slate-700 dark:text-slate-300 flex items-center gap-2">
-                      <User className="w-4 h-4 text-blue-500" /> {userName}
-                    </span>
-                    <button onClick={handleLogout} className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors">
-                      <LogOut className="w-4 h-4" /> Logout
+                  <div className="relative" ref={dropdownRef}>
+                    <button 
+                      onClick={() => setDropdownOpen(!dropdownOpen)}
+                      className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                    >
+                      <User className="w-4 h-4 text-blue-500" />
+                      <span className="text-sm font-medium text-slate-700 dark:text-slate-300">{userName}</span>
+                      <ChevronDown className="w-4 h-4 text-slate-500" />
                     </button>
-                  </>
+
+                    {dropdownOpen && (
+                      <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 py-1 z-50 animate-in fade-in slide-in-from-top-2">
+                        <Link 
+                          to="/favorites" 
+                          onClick={() => setDropdownOpen(false)}
+                          className="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700"
+                        >
+                          <Heart className="w-4 h-4 text-rose-500" />
+                          My Favorites
+                        </Link>
+                        <hr className="my-1 border-slate-200 dark:border-slate-700" />
+                        <button 
+                          onClick={handleLogout} 
+                          className="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
+                        >
+                          <LogOut className="w-4 h-4" />
+                          Logout
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 ) : (
                   <>
                     <Link to="/login" className="text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors">Log in</Link>

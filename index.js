@@ -4,6 +4,7 @@ import bodyParser from "body-parser";
 import dotenv from "dotenv";
 import route from "./routes/spotRoute.js";
 import authRoute from "./routes/authRoute.js";
+import userRoute from "./routes/userRoute.js";
 
 const app = express();
 app.use(bodyParser.json());
@@ -26,3 +27,4 @@ mongoose
 
 app.use("/api/spot", route);
 app.use("/api/auth", authRoute);
+app.use("/api/users", userRoute);

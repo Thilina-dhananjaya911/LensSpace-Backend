@@ -3,7 +3,7 @@ import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import { Link } from 'react-router-dom';
 import { Spot } from '../types/Spot';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Heart } from 'lucide-react';
 
 // Fix for default marker icons in react-leaflet
 import L from 'leaflet';
@@ -21,6 +21,9 @@ L.Marker.prototype.options.icon = DefaultIcon;
 export default function MapPage() {
   const [spots, setSpots] = useState<Spot[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
+  const [favoriteSpotIds, setFavoriteSpotIds] = useState<string[]>([]);
+  const token = localStorage.getItem('token');
 
   useEffect(() => {
     fetchSpots();
@@ -40,6 +43,29 @@ export default function MapPage() {
     }
   };
 
+  const handleToggleFavorites = async () => {
+    if (!token) return alert('Please login to filter your favorites');
+    
+    if (!showFavoritesOnly && favoriteSpotIds.length === 0) {
+      try {
+        const response = await fetch('/api/users/favorites', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setFavoriteSpotIds(data.map((fav: any) => fav._id));
+        }
+      } catch (err) {
+        console.error("Failed to fetch favorites", err);
+      }
+    }
+    setShowFavoritesOnly(!showFavoritesOnly);
+  };
+
+  const displayedSpots = showFavoritesOnly 
+    ? spots.filter(spot => favoriteSpotIds.includes(spot._id))
+    : spots;
+
   if (loading) {
     return (
       <div className="flex-1 flex items-center justify-center bg-slate-50 dark:bg-slate-900">
@@ -55,8 +81,21 @@ export default function MapPage() {
 
   return (
     <div className="flex-1 flex flex-col relative z-0">
-      <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[1000] glass px-6 py-2 rounded-full shadow-lg">
-        <h2 className="text-sm font-bold text-slate-800 dark:text-white">Map View ({spots.length} Spots)</h2>
+      <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[1000] flex items-center gap-3 glass px-6 py-2 rounded-full shadow-lg">
+        <h2 className="text-sm font-bold text-slate-800 dark:text-white">Map View ({displayedSpots.length} Spots)</h2>
+        
+        {token && (
+          <>
+            <div className="w-px h-4 bg-slate-300 dark:bg-slate-600"></div>
+            <button 
+              onClick={handleToggleFavorites}
+              className={`flex items-center gap-1.5 text-xs font-bold px-3 py-1 rounded-full transition-colors ${showFavoritesOnly ? 'bg-rose-500 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'}`}
+            >
+              <Heart className={`w-3.5 h-3.5 ${showFavoritesOnly ? 'fill-current' : ''}`} />
+              Favorites Only
+            </button>
+          </>
+        )}
       </div>
       
       <MapContainer 
@@ -70,7 +109,7 @@ export default function MapPage() {
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
         
-        {spots.map(spot => {
+        {displayedSpots.map(spot => {
           if (spot.latitude && spot.longitude) {
             return (
               <Marker key={spot._id} position={[spot.latitude, spot.longitude]}>

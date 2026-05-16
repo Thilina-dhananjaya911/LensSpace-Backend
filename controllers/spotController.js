@@ -56,7 +56,7 @@ export const create = async (req, res) => {
     });
 
     const savedSpot = await spotData.save();
-    res.status(200).json(savedSpot);
+    res.status(201).json(savedSpot);
   } catch (error) {
     console.error("Error in create:", error);
     res.status(500).json({ error: "Internal Server Error" });

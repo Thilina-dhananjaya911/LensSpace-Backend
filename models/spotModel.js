@@ -22,7 +22,7 @@ const spotSchema = new mongoose.Schema({
     default: "Quiet",
   },
   localBusinessHint: { type: String },
-  ecoScore: { type: Number, min: 1, max: 5, default: 5 },
+  ecoScore: { type: Number, min: 1, max: 10, default: 5 },
 
   latitude: { type: Number, required: true },
   longitude: { type: Number, required: true },

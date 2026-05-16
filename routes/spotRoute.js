@@ -20,6 +20,14 @@ import {
   deleteSpot,
   getSingleSpot,
 } from "../controllers/spotController.js";
+import {
+  addCommunityPhoto,
+  getCommunityPhotos,
+  updateCommunityPhoto,
+  deleteCommunityPhoto,
+  rateCommunityPhoto,
+  commentCommunityPhoto,
+} from "../controllers/communityPhotoController.js";
 
 const route = express.Router();
 
@@ -29,5 +37,13 @@ route.get("/get/:id", getSingleSpot);
 route.put("/update/:id", upload.single("image"), update);
 
 route.delete("/delete/:id", authMiddleware, deleteSpot);
+
+// Community Gallery Routes
+route.get("/:spotId/photos", getCommunityPhotos);
+route.post("/:spotId/photos", authMiddleware, upload.single("image"), addCommunityPhoto);
+route.patch("/photos/:photoId", authMiddleware, updateCommunityPhoto);
+route.delete("/photos/:photoId", authMiddleware, deleteCommunityPhoto);
+route.post("/photos/:photoId/rate", authMiddleware, rateCommunityPhoto);
+route.post("/photos/:photoId/comment", authMiddleware, commentCommunityPhoto);
 
 export default route;

@@ -7,10 +7,15 @@ export default function SpotFormPage() {
   const { id } = useParams<{ id: string }>();
   const isEditing = !!id;
   const navigate = useNavigate();
+  const token = localStorage.getItem('token');
   
   const [loading, setLoading] = useState(isEditing);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+
+  const [locationSearchText, setLocationSearchText] = useState('');
+  const [locationSuggestions, setLocationSuggestions] = useState<any[]>([]);
+  const [isSearchingLocation, setIsSearchingLocation] = useState(false);
 
   const [formData, setFormData] = useState<SpotFormData>({
     name: '',
@@ -67,6 +72,58 @@ export default function SpotFormPage() {
     }
   };
 
+  const handleLocationSearch = async (query: string) => {
+    setLocationSearchText(query);
+    if (!query || query.length < 3) {
+      setLocationSuggestions([]);
+      return;
+    }
+    
+    setIsSearchingLocation(true);
+    try {
+      const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&countrycodes=lk&email=hello@lensspace.com`);
+      if (!response.ok) throw new Error('Failed to fetch from OSM');
+      const data = await response.json();
+      setLocationSuggestions(data);
+    } catch (err) {
+      console.error("Error fetching location suggestions", err);
+    } finally {
+      setIsSearchingLocation(false);
+    }
+  };
+
+  const handleSelectLocation = (suggestion: any) => {
+    setFormData(prev => ({
+      ...prev,
+      latitude: parseFloat(suggestion.lat),
+      longitude: parseFloat(suggestion.lon)
+    }));
+    setLocationSearchText(suggestion.display_name);
+    setLocationSuggestions([]);
+  };
+
+  const handleUseCurrentLocation = () => {
+    if (!navigator.geolocation) {
+      alert("Geolocation is not supported by your browser.");
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setFormData(prev => ({
+          ...prev,
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude
+        }));
+        setLocationSearchText("Current Location");
+        setLocationSuggestions([]);
+      },
+      (error) => {
+        alert(`Error getting location: ${error.message}`);
+      }
+    );
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
@@ -107,6 +164,36 @@ export default function SpotFormPage() {
       setSaving(false);
     }
   };
+
+  if (!token) {
+    return (
+      <div className="flex-1 flex items-center justify-center p-4">
+        <div className="bg-slate-900 rounded-3xl shadow-2xl p-8 md:p-10 max-w-md w-full text-center border border-slate-800">
+          <div className="w-16 h-16 bg-red-500/10 text-red-500 rounded-full flex items-center justify-center mx-auto mb-6">
+            <AlertCircle className="w-8 h-8" />
+          </div>
+          <h2 className="text-2xl font-bold text-white mb-3">Access Denied</h2>
+          <p className="text-slate-400 mb-8 leading-relaxed">
+            Please Login or Register to contribute a photography spot to LensSpace.
+          </p>
+          <div className="flex flex-col gap-3">
+            <button
+              onClick={() => navigate('/login')}
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition-colors"
+            >
+              Go to Login
+            </button>
+            <button
+              onClick={() => navigate(-1)}
+              className="w-full bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium py-3 rounded-xl transition-colors"
+            >
+              Go Back
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (loading) {
     return (
@@ -275,25 +362,65 @@ export default function SpotFormPage() {
           <h2 className="text-xl font-bold text-slate-900 dark:text-white border-b border-slate-100 dark:border-slate-700 pb-2">Coordinates & Extra Info</h2>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="md:col-span-2 space-y-3">
+              <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Search Location or Use GPS *</label>
+              <div className="flex flex-col md:flex-row gap-3 relative">
+                <div className="relative flex-1">
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={locationSearchText}
+                      onChange={(e) => handleLocationSearch(e.target.value)}
+                      placeholder="Search for a place in Sri Lanka..."
+                      className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-shadow"
+                    />
+                    {isSearchingLocation && (
+                      <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                        <Loader2 className="w-4 h-4 animate-spin text-blue-500" />
+                      </div>
+                    )}
+                  </div>
+                  {locationSuggestions.length > 0 && (
+                    <ul className="absolute z-10 w-full mt-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                      {locationSuggestions.map((sug, i) => (
+                        <li 
+                          key={i} 
+                          onClick={() => handleSelectLocation(sug)}
+                          className="px-4 py-2 hover:bg-slate-100 dark:hover:bg-slate-700 cursor-pointer text-sm text-slate-700 dark:text-slate-300 border-b border-slate-100 dark:border-slate-700 last:border-0"
+                        >
+                          {sug.display_name}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+                <button
+                  type="button"
+                  onClick={handleUseCurrentLocation}
+                  className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-800 dark:text-slate-200 rounded-lg font-medium transition-colors flex items-center justify-center gap-2 whitespace-nowrap"
+                >
+                  <span>🎯</span> Use Current Location
+                </button>
+              </div>
+            </div>
+
             <div className="space-y-2">
-              <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Latitude *</label>
+              <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Latitude (Auto-filled) *</label>
               <input 
-                type="number" step="any" required
+                type="number" step="any" required readOnly
                 name="latitude"
                 value={formData.latitude}
-                onChange={handleChange}
-                className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-shadow font-mono text-sm"
+                className="w-full px-4 py-2 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg outline-none font-mono text-sm cursor-not-allowed text-slate-500"
               />
             </div>
             
             <div className="space-y-2">
-              <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Longitude *</label>
+              <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Longitude (Auto-filled) *</label>
               <input 
-                type="number" step="any" required
+                type="number" step="any" required readOnly
                 name="longitude"
                 value={formData.longitude}
-                onChange={handleChange}
-                className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-shadow font-mono text-sm"
+                className="w-full px-4 py-2 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg outline-none font-mono text-sm cursor-not-allowed text-slate-500"
               />
             </div>
             
