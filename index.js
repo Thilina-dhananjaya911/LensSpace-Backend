@@ -5,12 +5,12 @@ import dotenv from "dotenv";
 import route from "./routes/spotRoute.js";
 
 const app = express();
-app.use(bodyParser.json()); // JSON data කියවන්න [cite: 152]
+app.use(bodyParser.json());
 dotenv.config();
 
 const PORT = process.env.PORT || 5000;
 const MONGOURL = process.env.MONGO_URL;
-console.log("ඔන්න මම බැලුවා: ", process.env.MONGO_URL);
+console.log("Look, I checked:", process.env.MONGO_URL);
 
 mongoose
   .connect(MONGOURL)

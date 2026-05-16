@@ -7,7 +7,7 @@ const spotSchema = new mongoose.Schema({
   category: { type: String, required: true },
   bestTime: { type: String },
   tips: { type: String },
-  // ආරක්ෂාව සහ සමාජ වගකීම
+
   safetyLevel: {
     type: String,
     enum: ["Safe", "Caution", "High Risk"],
@@ -15,7 +15,7 @@ const spotSchema = new mongoose.Schema({
   },
   ecoFriendlyNotes: { type: String },
   accessibility: { type: String },
-  // අතිරේක තොරතුරු
+
   liveStatus: {
     type: String,
     enum: ["Crowded", "Quiet", "Rainy", "Clear Sky"],
@@ -23,7 +23,7 @@ const spotSchema = new mongoose.Schema({
   },
   localBusinessHint: { type: String },
   ecoScore: { type: Number, min: 1, max: 5, default: 5 },
-  // සිතියම් පිහිටීම (මෙය තමයි වැදගත්ම කොටස)
+
   latitude: { type: Number, required: true },
   longitude: { type: Number, required: true },
 });

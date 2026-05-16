@@ -1,6 +1,5 @@
 import Spot from "../models/spotModel.js";
 
-// 1. අලුත් Spot එකක් ඇතුළත් කිරීම (Create)
 export const create = async (req, res) => {
   try {
     const {
@@ -20,7 +19,6 @@ export const create = async (req, res) => {
       longitude,
     } = req.body;
 
-    // Validation: සිතියම් දත්ත ඇතුළුව පරීක්ෂා කිරීම
     if (
       !name ||
       !location ||
@@ -31,7 +29,7 @@ export const create = async (req, res) => {
     ) {
       return res.status(400).json({
         message:
-          "අත්‍යවශ්‍ය දත්ත සහ සිතියම් පිහිටීම (Latitude/Longitude) ඇතුළත් කරන්න!",
+          "Enter the required data and map location (Latitude/Longitude)!",
       });
     }
 
@@ -59,7 +57,6 @@ export const create = async (req, res) => {
   }
 };
 
-// 2. සියලුම Spots ලබා ගැනීම
 export const fetch = async (req, res) => {
   try {
     const spots = await Spot.find();
@@ -72,7 +69,6 @@ export const fetch = async (req, res) => {
   }
 };
 
-// 3. යාවත්කාලීන කිරීම (Update)
 export const update = async (req, res) => {
   try {
     const id = req.params.id;
@@ -89,7 +85,6 @@ export const update = async (req, res) => {
   }
 };
 
-// 4. මකා දැමීම (Delete)
 export const deleteSpot = async (req, res) => {
   try {
     const id = req.params.id;
