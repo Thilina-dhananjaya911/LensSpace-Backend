@@ -1,8 +1,5 @@
 import User from "../models/userModel.js";
 
-// @desc    Toggle favorite spot
-// @route   POST /api/users/favorite/:spotId
-// @access  Private
 export const toggleFavorite = async (req, res) => {
   try {
     const spotId = req.params.spotId;
@@ -42,9 +39,6 @@ export const toggleFavorite = async (req, res) => {
   }
 };
 
-// @desc    Get user's favorite spots
-// @route   GET /api/users/favorites
-// @access  Private
 export const getFavorites = async (req, res) => {
   try {
     const userId = req.user._id;

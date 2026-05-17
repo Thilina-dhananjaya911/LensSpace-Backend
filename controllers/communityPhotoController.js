@@ -1,8 +1,5 @@
 import CommunityPhoto from "../models/communityPhotoModel.js";
 
-// @desc    Add a community photo to a spot
-// @route   POST /api/spot/:spotId/photos
-// @access  Private
 export const addCommunityPhoto = async (req, res) => {
   try {
     const { spotId } = req.params;
@@ -31,14 +28,11 @@ export const addCommunityPhoto = async (req, res) => {
   }
 };
 
-// @desc    Get all photos for a spot
-// @route   GET /api/spot/:spotId/photos
-// @access  Public
 export const getCommunityPhotos = async (req, res) => {
   try {
     const { spotId } = req.params;
     const photos = await CommunityPhoto.find({ spotId })
-      .populate("userId", "name email profilePicture username") // populated fields requested by user
+      .populate("userId", "name email profilePicture username")
       .populate("comments.userId", "name email profilePicture username")
       .sort({ createdAt: -1 });
 
@@ -49,9 +43,6 @@ export const getCommunityPhotos = async (req, res) => {
   }
 };
 
-// @desc    Update a community photo caption
-// @route   PATCH /api/spot/photos/:photoId
-// @access  Private
 export const updateCommunityPhoto = async (req, res) => {
   try {
     const { photoId } = req.params;
@@ -64,7 +55,6 @@ export const updateCommunityPhoto = async (req, res) => {
       return res.status(404).json({ message: "Photo not found" });
     }
 
-    // Check ownership
     if (photo.userId.toString() !== userId.toString()) {
       return res.status(403).json({ message: "Not authorized to update this photo" });
     }
@@ -79,9 +69,6 @@ export const updateCommunityPhoto = async (req, res) => {
   }
 };
 
-// @desc    Delete a community photo
-// @route   DELETE /api/spot/photos/:photoId
-// @access  Private
 export const deleteCommunityPhoto = async (req, res) => {
   try {
     const { photoId } = req.params;
@@ -93,7 +80,6 @@ export const deleteCommunityPhoto = async (req, res) => {
       return res.status(404).json({ message: "Photo not found" });
     }
 
-    // Check ownership
     if (photo.userId.toString() !== userId.toString()) {
       return res.status(403).json({ message: "Not authorized to delete this photo" });
     }
@@ -107,9 +93,6 @@ export const deleteCommunityPhoto = async (req, res) => {
   }
 };
 
-// @desc    Rate a community photo
-// @route   POST /api/spot/photos/:photoId/rate
-// @access  Private
 export const rateCommunityPhoto = async (req, res) => {
   try {
     const { photoId } = req.params;
@@ -126,7 +109,7 @@ export const rateCommunityPhoto = async (req, res) => {
     }
 
     const existingRating = photo.ratings.find(r => r.userId.toString() === userId.toString());
-    
+
     if (existingRating) {
       existingRating.stars = stars;
     } else {
@@ -141,9 +124,6 @@ export const rateCommunityPhoto = async (req, res) => {
   }
 };
 
-// @desc    Comment on a community photo
-// @route   POST /api/spot/photos/:photoId/comment
-// @access  Private
 export const commentCommunityPhoto = async (req, res) => {
   try {
     const { photoId } = req.params;
@@ -162,7 +142,6 @@ export const commentCommunityPhoto = async (req, res) => {
     photo.comments.push({ userId, text });
     await photo.save();
 
-    // Populate user info for the new comment to return to frontend
     const populatedPhoto = await CommunityPhoto.findById(photoId).populate("comments.userId", "name email profilePicture username");
 
     res.status(201).json({ message: "Comment added successfully", comments: populatedPhoto.comments });
