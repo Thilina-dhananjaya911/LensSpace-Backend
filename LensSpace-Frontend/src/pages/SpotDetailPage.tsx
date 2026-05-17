@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { MapPin, Shield, ShieldAlert, ShieldCheck, Sun, CloudRain, Users, UserMinus, Leaf, Clock, Lightbulb, Navigation, Heart, Share2, Edit2, Loader2, ArrowLeft, Trash2, Camera, X, Star, MessageCircle, Send } from 'lucide-react';
+import { MapPin, Shield, ShieldAlert, ShieldCheck, Clock, Navigation, Heart, Share2, Edit2, Loader2, ArrowLeft, Trash2, Camera, X } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { Spot } from '../types/Spot';
 
@@ -19,10 +19,6 @@ export default function SpotDetailPage() {
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
 
   const [selectedPhoto, setSelectedPhoto] = useState<any | null>(null);
-  const [commentText, setCommentText] = useState('');
-  const [hoveredStar, setHoveredStar] = useState(0);
-  const [ratingLoading, setRatingLoading] = useState(false);
-  const [commentLoading, setCommentLoading] = useState(false);
 
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
@@ -179,63 +175,7 @@ export default function SpotDetailPage() {
     }
   };
 
-  const handleRatePhoto = async (photoId: string, stars: number) => {
-    if (!token) return alert('Please log in to rate.');
-    setRatingLoading(true);
-    try {
-      const response = await fetch(`/api/spot/photos/${photoId}/rate`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ stars })
-      });
-      if (!response.ok) throw new Error('Failed to rate');
-      const data = await response.json();
-      
-      setSelectedPhoto((prev: any) => ({ ...prev, ratings: data.ratings }));
-      fetchCommunityPhotos();
-    } catch (err) {
-      alert('Failed to rate photo');
-    } finally {
-      setRatingLoading(false);
-    }
-  };
 
-  const handleCommentPhoto = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!token) return alert('Please log in to comment.');
-    if (!commentText.trim()) return;
-
-    setCommentLoading(true);
-    try {
-      const response = await fetch(`/api/spot/photos/${selectedPhoto._id}/comment`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ text: commentText })
-      });
-      if (!response.ok) throw new Error('Failed to comment');
-      const data = await response.json();
-      
-      setSelectedPhoto((prev: any) => ({ ...prev, comments: data.comments }));
-      setCommentText('');
-      fetchCommunityPhotos();
-    } catch (err) {
-      alert('Failed to post comment');
-    } finally {
-      setCommentLoading(false);
-    }
-  };
-  
-  const calculateAverageRating = (ratings: any[]) => {
-    if (!ratings || ratings.length === 0) return 0;
-    const sum = ratings.reduce((acc: number, r: any) => acc + r.stars, 0);
-    return (sum / ratings.length).toFixed(1);
-  };
 
   const handleDeletePhoto = async (photoId: string) => {
     if (!window.confirm("Are you sure you want to delete this photo?")) return;
@@ -294,16 +234,7 @@ export default function SpotDetailPage() {
     'High Risk': 'text-red-600 bg-red-50 dark:bg-red-900/20 dark:text-red-400'
   };
 
-  const statusConfig = {
-    'Crowded': { icon: Users, color: 'text-amber-500 bg-amber-50' },
-    'Quiet': { icon: UserMinus, color: 'text-emerald-500 bg-emerald-50' },
-    'Rainy': { icon: CloudRain, color: 'text-blue-500 bg-blue-50' },
-    'Clear Sky': { icon: Sun, color: 'text-amber-500 bg-amber-50' }
-  };
-  const StatusIcon = statusConfig[spot.liveStatus]?.icon || Sun;
-  const statusColor = statusConfig[spot.liveStatus]?.color || 'text-slate-500 bg-slate-50';
-
-  const spotImageUrl = spot?.image || (spot as any)?.imageUrl;
+  const spotImageUrl = spot?.image || spot?.imageUrl || (spot as any)?.imageUrl;
   const heroImageUrl = spotImageUrl ? (spotImageUrl.startsWith('http') ? spotImageUrl : `http://localhost:8000/${spotImageUrl.replace(/\\/g, '/')}`) : '';
 
   console.log("DEBUG:", { spotCreatedBy: spot.createdBy, loggedInUserId: userId });
@@ -368,13 +299,8 @@ export default function SpotDetailPage() {
             <span className="bg-blue-600 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
               {spot.category}
             </span>
-            {spot.ecoScore >= 8 && (
-              <span className="bg-emerald-500 text-white text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1">
-                <Leaf className="w-3 h-3" /> Eco Choice ({spot.ecoScore}/10)
-              </span>
-            )}
           </div>
-          <h1 className="text-3xl md:text-5xl font-extrabold text-white mb-2">{spot.name}</h1>
+          <h1 className="text-3xl md:text-5xl font-extrabold text-white mb-2">{spot.title}</h1>
           <p className="flex items-center gap-2 text-slate-200 text-lg">
             <MapPin className="w-5 h-5" /> {spot.location}
           </p>
@@ -392,41 +318,17 @@ export default function SpotDetailPage() {
             </p>
           </div>
 
-          <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700">
-            <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
-              <Lightbulb className="w-6 h-6 text-amber-500" /> Pro Tips
-            </h2>
-            <p className="text-slate-600 dark:text-slate-300 bg-amber-50 dark:bg-amber-900/10 p-4 rounded-xl border border-amber-100 dark:border-amber-900/30">
-              {spot.tips}
-            </p>
-            
-            <div className="mt-6 flex items-start gap-4">
-              <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl">
-                <Clock className="w-6 h-6 text-blue-600 dark:text-blue-400" />
-              </div>
-              <div>
-                <h3 className="font-semibold text-slate-900 dark:text-white">Best Time to Visit</h3>
-                <p className="text-slate-600 dark:text-slate-400 mt-1">{spot.bestTime}</p>
-              </div>
-            </div>
-          </div>
-
-          {(spot.ecoFriendlyNotes || spot.accessibility) && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              {spot.ecoFriendlyNotes && (
-                <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-emerald-100 dark:border-emerald-900/30">
-                  <h3 className="font-bold text-slate-900 dark:text-white mb-2 flex items-center gap-2">
-                    <Leaf className="w-5 h-5 text-emerald-500" /> Eco Notes
-                  </h3>
-                  <p className="text-sm text-slate-600 dark:text-slate-300">{spot.ecoFriendlyNotes}</p>
+          {spot.bestTimeToVisit && (
+            <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700">
+              <div className="flex items-start gap-4">
+                <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl shrink-0">
+                  <Clock className="w-6 h-6 text-blue-600 dark:text-blue-400" />
                 </div>
-              )}
-              {spot.accessibility && (
-                <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700">
-                  <h3 className="font-bold text-slate-900 dark:text-white mb-2">Accessibility</h3>
-                  <p className="text-sm text-slate-600 dark:text-slate-300">{spot.accessibility}</p>
+                <div>
+                  <h2 className="font-bold text-slate-900 dark:text-white text-lg">Best Time to Visit</h2>
+                  <p className="text-slate-600 dark:text-slate-400 mt-1">{spot.bestTimeToVisit}</p>
                 </div>
-              )}
+              </div>
             </div>
           )}
         </div>
@@ -442,26 +344,6 @@ export default function SpotDetailPage() {
                 <span className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-bold ${safetyColors[spot.safetyLevel]}`}>
                   <SafetyIcon className="w-4 h-4" /> {spot.safetyLevel}
                 </span>
-              </div>
-              
-              <div className="flex items-center justify-between">
-                <span className="text-slate-600 dark:text-slate-300 font-medium">Live Vibe</span>
-                <span className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-bold ${statusColor} dark:bg-slate-700`}>
-                  <StatusIcon className="w-4 h-4" /> {spot.liveStatus}
-                </span>
-              </div>
-              
-              <div className="flex items-center justify-between">
-                <span className="text-slate-600 dark:text-slate-300 font-medium">Eco Score</span>
-                <div className="flex items-center gap-2">
-                  <div className="w-24 h-2 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
-                    <div 
-                      className="h-full bg-emerald-500" 
-                      style={{ width: `${(spot.ecoScore / 10) * 100}%` }}
-                    />
-                  </div>
-                  <span className="text-sm font-bold text-slate-900 dark:text-white">{spot.ecoScore}/10</span>
-                </div>
               </div>
             </div>
           </div>
@@ -485,14 +367,7 @@ export default function SpotDetailPage() {
             </div>
           )}
 
-          {spot.localBusinessHint && (
-            <div className="bg-blue-50 dark:bg-blue-900/20 p-6 rounded-2xl border border-blue-100 dark:border-blue-900/30">
-              <h3 className="font-bold text-blue-900 dark:text-blue-300 mb-2">Local Support</h3>
-              <p className="text-sm text-blue-800 dark:text-blue-400 leading-relaxed">
-                {spot.localBusinessHint}
-              </p>
-            </div>
-          )}
+
         </div>
       </div>
 
@@ -611,17 +486,17 @@ export default function SpotDetailPage() {
               />
             </div>
             
-            {/* Sidebar */}
-            <div className="w-full md:w-[400px] bg-slate-900 border-l border-slate-800 flex flex-col h-[60vh] md:h-full md:max-h-[85vh] shadow-2xl relative shrink-0">
-              
-              {/* Header (Author & Caption) */}
-              <div className="p-5 border-b border-slate-800 shrink-0">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-11 h-11 rounded-full bg-slate-800 overflow-hidden shrink-0 border border-slate-700">
+            {/* Sidebar — User Profile & Caption */}
+            <div className="w-full md:w-[360px] bg-slate-900 border-l border-slate-800 flex flex-col shadow-2xl shrink-0">
+
+              {/* Author & Caption */}
+              <div className="p-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-12 h-12 rounded-full bg-slate-800 overflow-hidden shrink-0 border border-slate-700">
                     {selectedPhoto.userId?.profilePicture ? (
                       <img src={selectedPhoto.userId.profilePicture} className="w-full h-full object-cover" />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center text-slate-400 font-bold">
+                      <div className="w-full h-full flex items-center justify-center text-slate-400 font-bold text-lg">
                         {selectedPhoto.userId?.name?.charAt(0) || 'U'}
                       </div>
                     )}
@@ -636,98 +511,10 @@ export default function SpotDetailPage() {
                   </div>
                 </div>
                 {selectedPhoto.caption && (
-                  <p className="text-sm text-slate-300 leading-relaxed mt-2">{selectedPhoto.caption}</p>
+                  <p className="text-sm text-slate-300 leading-relaxed">{selectedPhoto.caption}</p>
                 )}
               </div>
-              
-              {/* Rating Section */}
-              <div className="p-5 border-b border-slate-800 bg-slate-800/30 shrink-0">
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-sm font-bold text-slate-300">Rating</span>
-                  <div className="flex items-center gap-1.5 text-amber-500 bg-amber-500/10 px-2.5 py-1 rounded-full">
-                    <Star className="w-3.5 h-3.5 fill-current" />
-                    <span className="font-bold text-sm text-amber-500">{calculateAverageRating(selectedPhoto.ratings)}</span>
-                    <span className="text-xs text-amber-500/70">({selectedPhoto.ratings?.length || 0})</span>
-                  </div>
-                </div>
-                
-                <div className="flex items-center gap-2 justify-center py-2">
-                  {[1, 2, 3, 4, 5].map((star) => {
-                    const myRating = selectedPhoto.ratings?.find((r: any) => r.userId === userId || r.userId?._id === userId)?.stars || 0;
-                    const isFilled = (hoveredStar || myRating) >= star;
-                    return (
-                      <button
-                        key={star}
-                        disabled={ratingLoading}
-                        onMouseEnter={() => setHoveredStar(star)}
-                        onMouseLeave={() => setHoveredStar(0)}
-                        onClick={() => handleRatePhoto(selectedPhoto._id, star)}
-                        className={`p-1.5 transition-all duration-300 ${isFilled ? 'text-amber-400 hover:scale-110 drop-shadow-[0_0_8px_rgba(251,191,36,0.5)]' : 'text-slate-600 hover:scale-110 hover:text-slate-400'}`}
-                      >
-                        <Star className={`w-7 h-7 ${isFilled ? 'fill-current' : ''}`} />
-                      </button>
-                    )
-                  })}
-                </div>
-              </div>
-              
-              {/* Comments Section */}
-              <div className="flex-1 overflow-y-auto p-5 space-y-4 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent min-h-[200px]">
-                <h4 className="text-sm font-bold text-white flex items-center gap-2 mb-5">
-                  <MessageCircle className="w-4 h-4 text-slate-400" /> Comments ({selectedPhoto.comments?.length || 0})
-                </h4>
-                
-                {(!selectedPhoto.comments || selectedPhoto.comments.length === 0) ? (
-                  <div className="flex flex-col items-center justify-center py-10 text-slate-500">
-                    <MessageCircle className="w-8 h-8 mb-3 opacity-20" />
-                    <p className="text-sm font-medium">No comments yet.</p>
-                    <p className="text-xs mt-1 opacity-70">Be the first to share your thoughts!</p>
-                  </div>
-                ) : (
-                  selectedPhoto.comments.map((comment: any, idx: number) => (
-                    <div key={idx} className="flex gap-3 group">
-                      <div className="w-8 h-8 rounded-full bg-slate-800 overflow-hidden shrink-0 border border-slate-700">
-                        {comment.userId?.profilePicture ? (
-                          <img src={comment.userId.profilePicture} className="w-full h-full object-cover" />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-xs text-slate-400 font-bold">
-                            {comment.userId?.name?.charAt(0) || 'U'}
-                          </div>
-                        )}
-                      </div>
-                      <div className="flex-1 bg-slate-800/50 p-3.5 rounded-2xl rounded-tl-none border border-slate-700/50 group-hover:border-slate-600 transition-colors">
-                        <p className="text-xs font-bold text-slate-200 mb-1.5">
-                          {comment.userId?.name || 'User'}
-                        </p>
-                        <p className="text-sm text-slate-300 leading-relaxed">{comment.text}</p>
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-              
-              {/* Comment Input */}
-              {token && (
-                <div className="p-4 bg-slate-900 border-t border-slate-800 mt-auto shrink-0 sticky bottom-0 z-20">
-                  <form onSubmit={handleCommentPhoto} className="flex gap-2">
-                    <input 
-                      type="text" 
-                      value={commentText}
-                      onChange={(e) => setCommentText(e.target.value)}
-                      placeholder="Add a comment..."
-                      className="flex-1 px-4 py-2.5 bg-slate-800 border border-slate-700 rounded-full focus:outline-none focus:border-slate-500 focus:ring-1 focus:ring-slate-500 text-sm text-white placeholder-slate-500 transition-all"
-                    />
-                    <button 
-                      type="submit"
-                      disabled={commentLoading || !commentText.trim()}
-                      className="w-10 h-10 flex items-center justify-center bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:hover:bg-blue-600 text-white rounded-full transition-colors shrink-0 shadow-[0_0_10px_rgba(37,99,235,0.3)]"
-                    >
-                      {commentLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4 -ml-0.5" />}
-                    </button>
-                  </form>
-                </div>
-              )}
-              
+
             </div>
           </div>
         </div>

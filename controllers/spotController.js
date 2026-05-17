@@ -2,56 +2,25 @@ import Spot from "../models/spotModel.js";
 
 export const create = async (req, res) => {
   try {
-    const {
-      name,
-      location,
-      description,
-      category,
-      bestTime,
-      tips,
-      safetyLevel,
-      ecoFriendlyNotes,
-      accessibility,
-      liveStatus,
-      localBusinessHint,
-      ecoScore,
-      latitude,
-      longitude,
-    } = req.body;
+    const { title, category, safetyLevel, location, description, bestTimeToVisit, latitude, longitude } = req.body;
+    const imageUrl = req.file ? req.file.path.replace(/\\/g, "/") : null;
 
-    const image = req.file ? req.file.path.replace(/\\/g, "/") : null;
-
-    if (
-      !name ||
-      !location ||
-      !description ||
-      !category ||
-      !latitude ||
-      !longitude ||
-      !image
-    ) {
+    if (!title || !location || !description || !category || !imageUrl) {
       return res.status(400).json({
-        message:
-          "Enter the required data and map location (Latitude/Longitude)!",
+        message: "Please provide title, location, description, category, and an image.",
       });
     }
 
     const spotData = new Spot({
-      name,
+      title,
+      category,
+      safetyLevel,
       location,
       description,
-      category,
-      bestTime,
-      tips,
-      safetyLevel,
-      ecoFriendlyNotes,
-      accessibility,
-      liveStatus,
-      localBusinessHint,
-      ecoScore,
-      latitude,
-      longitude,
-      image,
+      bestTimeToVisit,
+      imageUrl,
+      latitude: latitude ? parseFloat(latitude) : null,
+      longitude: longitude ? parseFloat(longitude) : null,
       createdBy: req.user._id,
     });
 
@@ -86,13 +55,13 @@ export const update = async (req, res) => {
 
     const updateData = { ...req.body };
     if (req.file) {
-      updateData.image = req.file.path.replace(/\\/g, "/");
+      updateData.imageUrl = req.file.path.replace(/\\/g, "/");
     }
+    if (updateData.latitude) updateData.latitude = parseFloat(updateData.latitude);
+    if (updateData.longitude) updateData.longitude = parseFloat(updateData.longitude);
 
-    const updatedSpot = await Spot.findByIdAndUpdate(id, updateData, {
-      new: true,
-    });
-    res.status(201).json(updatedSpot);
+    const updatedSpot = await Spot.findByIdAndUpdate(id, updateData, { returnDocument: 'after' });
+    res.status(200).json(updatedSpot);
   } catch (error) {
     console.error("Error in update:", error);
     res.status(500).json({ error: "Internal Server Error." });
@@ -108,13 +77,11 @@ export const deleteSpot = async (req, res) => {
     }
 
     if (spot.createdBy.toString() !== req.user._id.toString()) {
-      return res
-        .status(403)
-        .json({ message: "You are not authorized to delete this spot." });
+      return res.status(403).json({ message: "You are not authorized to delete this spot." });
     }
 
     await Spot.findByIdAndDelete(id);
-    res.status(201).json({ message: "Spot deleted successfully." });
+    res.status(200).json({ message: "Spot deleted successfully." });
   } catch (error) {
     console.error("Error in deleteSpot:", error);
     res.status(500).json({ error: "Internal Server Error." });

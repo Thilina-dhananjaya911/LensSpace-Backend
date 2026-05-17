@@ -34,11 +34,11 @@ export default function ExplorePage() {
   };
 
   const filteredSpots = spots.filter(spot => {
-    const matchesSearch = spot.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                          spot.location.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = (spot.title ?? '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          (spot.location ?? '').toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = categoryFilter ? spot.category === categoryFilter : true;
     const matchesSafety = safetyFilter ? spot.safetyLevel === safetyFilter : true;
-    
+
     return matchesSearch && matchesCategory && matchesSafety;
   });
 

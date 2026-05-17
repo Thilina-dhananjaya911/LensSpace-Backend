@@ -15,12 +15,12 @@ async function test() {
   if (!user.favorites) {
     user.favorites = [];
   }
-  
+
   // add a fake favorite
   const fakeId = new mongoose.Types.ObjectId();
   user.favorites.push(fakeId);
   await user.save();
-  
+
   console.log("Saved. Favorites:", user.favorites);
   process.exit(0);
 }

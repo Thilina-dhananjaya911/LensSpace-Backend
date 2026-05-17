@@ -6,14 +6,15 @@ import route from "./routes/spotRoute.js";
 import authRoute from "./routes/authRoute.js";
 import userRoute from "./routes/userRoute.js";
 
+dotenv.config(); // ← must be FIRST so PORT & MONGO_URL are available
+
 const app = express();
 app.use(bodyParser.json());
 app.use('/uploads', express.static('uploads'));
-dotenv.config();
 
 const PORT = process.env.PORT || 5000;
 const MONGOURL = process.env.MONGO_URL;
-console.log("Look, I checked:", process.env.MONGO_URL);
+console.log("MongoDB URL loaded:", MONGOURL ? "✅" : "❌ MISSING");
 
 mongoose
   .connect(MONGOURL)

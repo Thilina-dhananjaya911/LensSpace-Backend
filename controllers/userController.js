@@ -18,12 +18,10 @@ export const toggleFavorite = async (req, res) => {
     const isFavorited = user.favorites.some((id) => id.toString() === spotId);
 
     if (isFavorited) {
-      // Remove from favorites
       user.favorites = user.favorites.filter(
         (id) => id.toString() !== spotId
       );
     } else {
-      // Add to favorites
       user.favorites.push(spotId);
     }
 

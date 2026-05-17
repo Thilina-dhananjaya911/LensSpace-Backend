@@ -1,25 +1,26 @@
 export interface Spot {
   _id: string;
-  name: string;
+  title: string;
   location: string;
   description: string;
   category: string;
-  bestTime: string;
-  tips: string;
-  safetyLevel: 'Safe' | 'Caution' | 'High Risk';
-  liveStatus: 'Crowded' | 'Quiet' | 'Rainy' | 'Clear Sky';
-  ecoFriendlyNotes: string;
-  accessibility: string;
-  localBusinessHint: string;
-  ecoScore: number;
-  latitude: number;
-  longitude: number;
-  image?: string;
+  bestTimeToVisit?: string;
+  safetyLevel?: 'Safe' | 'Caution' | 'High Risk';
+  imageUrl?: string;
+  image?: string; // legacy fallback
+  latitude?: number | null;
+  longitude?: number | null;
   createdBy?: string;
   createdAt?: string;
   updatedAt?: string;
 }
 
-export type SpotFormData = Omit<Spot, '_id' | 'createdAt' | 'updatedAt' | 'image'> & {
-  image?: File | null;
+export type SpotFormData = {
+  title: string;
+  location: string;
+  description: string;
+  category: string;
+  bestTimeToVisit: string;
+  safetyLevel: 'Safe' | 'Caution' | 'High Risk';
+  image: File | null;
 };
